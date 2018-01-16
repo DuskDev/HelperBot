@@ -11,7 +11,7 @@ MSG_DEL_GROUP_ADMIN_NOT_EXIST = 'У @{} здесь нет власти!'
 MSG_DEL_GROUP_ADMIN = 'Генералы Сумрака больше не нуждаются в твоих услугах, @{}'
 
 MSG_NEW_GLOBAL_ADMIN = 'Новый Генерал: @{}!'
-MSG_NEW_GLOBAL_ADMIN_EXISTS = 'Великим Ктулху уже выбран @{}, изыди.'
+MSG_NEW_GLOBAL_ADMIN_EXISTS = 'Великим Ктулху уже выбран @{}, изыди!'
 
 MSG_DEL_GLOBAL_ADMIN_NOT_EXIST = 'У @{} нет власти!'
 MSG_DEL_GLOBAL_ADMIN = '@{} разжалован.'
