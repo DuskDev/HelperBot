@@ -437,13 +437,13 @@ def main():
     disp = updater.dispatcher
 
     # on different commands - answer in Telegram
-    disp.add_handler(CommandHandler("start", user_panel))
-    disp.add_handler(CommandHandler("admin", admin_panel))
-    disp.add_handler(CommandHandler("help", help_msg))
-    disp.add_handler(CommandHandler("ping", ping))
-    disp.add_handler(CommandHandler("set_global_trigger", set_global_trigger))
-    disp.add_handler(CommandHandler("add_global_trigger", add_global_trigger))
-    disp.add_handler(CommandHandler("del_global_trigger", del_global_trigger))
+    # disp.add_handler(CommandHandler("start", user_panel))
+    # disp.add_handler(CommandHandler("admin", admin_panel))
+    # disp.add_handler(CommandHandler("help", help_msg))
+    # disp.add_handler(CommandHandler("ping", ping))
+    # disp.add_handler(CommandHandler("set_global_trigger", set_global_trigger))
+    # disp.add_handler(CommandHandler("add_global_trigger", add_global_trigger))
+    # disp.add_handler(CommandHandler("del_global_trigger", del_global_trigger))
     disp.add_handler(CommandHandler("set_trigger", set_trigger))
     disp.add_handler(CommandHandler("add_trigger", add_trigger))
     disp.add_handler(CommandHandler("del_trigger", del_trigger))
@@ -452,27 +452,27 @@ def main():
     disp.add_handler(CommandHandler("enable_welcome", enable_welcome))
     disp.add_handler(CommandHandler("disable_welcome", disable_welcome))
     disp.add_handler(CommandHandler("show_welcome", show_welcome))
-    disp.add_handler(CommandHandler("add_admin", set_admin))
-    disp.add_handler(CommandHandler("add_global_admin", set_global_admin))
-    disp.add_handler(CommandHandler("del_global_admin", del_global_admin))
-    disp.add_handler(CommandHandler("add_super_admin", set_super_admin))
-    disp.add_handler(CommandHandler("del_admin", del_admin))
-    disp.add_handler(CommandHandler("list_admins", list_admins))
-    disp.add_handler(CommandHandler("kick", kick))
+    # disp.add_handler(CommandHandler("add_admin", set_admin))
+    # disp.add_handler(CommandHandler("add_global_admin", set_global_admin))
+    # disp.add_handler(CommandHandler("del_global_admin", del_global_admin))
+    # disp.add_handler(CommandHandler("add_super_admin", set_super_admin))
+    # disp.add_handler(CommandHandler("del_admin", del_admin))
+    # disp.add_handler(CommandHandler("list_admins", list_admins))
+    # disp.add_handler(CommandHandler("kick", kick))
     disp.add_handler(CommandHandler("enable_trigger", enable_trigger_all))
     disp.add_handler(CommandHandler("disable_trigger", disable_trigger_all))
-    disp.add_handler(CommandHandler("me", char_show))
+    # disp.add_handler(CommandHandler("me", char_show))
 
-    disp.add_handler(CommandHandler("add_squad", add_squad))
-    disp.add_handler(CommandHandler("del_squad", del_squad))
-    disp.add_handler(CommandHandler("enable_thorns", enable_thorns))
-    disp.add_handler(CommandHandler("disable_thorns", disable_thorns))
-    disp.add_handler(CommandHandler("set_squad_name", set_squad_name))
-    disp.add_handler(CommandHandler("set_invite_link", set_invite_link))
-    disp.add_handler(CommandHandler("find", find_by_username))
-    disp.add_handler(CommandHandler("add", add_to_squad))
-    disp.add_handler(CommandHandler("ban", ban))
-    disp.add_handler(CommandHandler("unban", unban))
+    # disp.add_handler(CommandHandler("add_squad", add_squad))
+    # disp.add_handler(CommandHandler("del_squad", del_squad))
+    # disp.add_handler(CommandHandler("enable_thorns", enable_thorns))
+    # disp.add_handler(CommandHandler("disable_thorns", disable_thorns))
+    # disp.add_handler(CommandHandler("set_squad_name", set_squad_name))
+    # disp.add_handler(CommandHandler("set_invite_link", set_invite_link))
+    # disp.add_handler(CommandHandler("find", find_by_username))
+    # disp.add_handler(CommandHandler("add", add_to_squad))
+    # disp.add_handler(CommandHandler("ban", ban))
+    # disp.add_handler(CommandHandler("unban", unban))
 
     disp.add_handler(CallbackQueryHandler(callback_query, pass_chat_data=True, pass_job_queue=True))
 
@@ -486,31 +486,31 @@ def main():
     # log all errors
     disp.add_error_handler(error)
 
-    updater.job_queue.run_daily(ready_to_battle, time(hour=7, minute=50))
-    updater.job_queue.run_daily(ready_to_battle_result,
-                                time(hour=7, minute=55))
-    updater.job_queue.run_daily(ready_to_battle, time(hour=11, minute=50))
-    updater.job_queue.run_daily(ready_to_battle_result,
-                                time(hour=11, minute=55))
-    updater.job_queue.run_daily(ready_to_battle, time(hour=15, minute=50))
-    updater.job_queue.run_daily(ready_to_battle_result,
-                                time(hour=15, minute=55))
-    updater.job_queue.run_daily(ready_to_battle, time(hour=19, minute=50))
-    updater.job_queue.run_daily(ready_to_battle_result,
-                                time(hour=19, minute=55))
-    updater.job_queue.run_daily(ready_to_battle, time(hour=23, minute=50))
-    updater.job_queue.run_daily(ready_to_battle_result,
-                                time(hour=23, minute=55))
-    updater.job_queue.run_daily(fresh_profiles,
-                                time(hour=7, minute=40))
-    updater.job_queue.run_daily(fresh_profiles,
-                                time(hour=11, minute=40))
-    updater.job_queue.run_daily(fresh_profiles,
-                                time(hour=15, minute=40))
-    updater.job_queue.run_daily(fresh_profiles,
-                                time(hour=19, minute=40))
-    updater.job_queue.run_daily(fresh_profiles,
-                                time(hour=23, minute=40))
+    # updater.job_queue.run_daily(ready_to_battle, time(hour=7, minute=50))
+    # updater.job_queue.run_daily(ready_to_battle_result,
+    #                             time(hour=7, minute=55))
+    # updater.job_queue.run_daily(ready_to_battle, time(hour=11, minute=50))
+    # updater.job_queue.run_daily(ready_to_battle_result,
+    #                             time(hour=11, minute=55))
+    # updater.job_queue.run_daily(ready_to_battle, time(hour=15, minute=50))
+    # updater.job_queue.run_daily(ready_to_battle_result,
+    #                             time(hour=15, minute=55))
+    # updater.job_queue.run_daily(ready_to_battle, time(hour=19, minute=50))
+    # updater.job_queue.run_daily(ready_to_battle_result,
+    #                             time(hour=19, minute=55))
+    # updater.job_queue.run_daily(ready_to_battle, time(hour=23, minute=50))
+    # updater.job_queue.run_daily(ready_to_battle_result,
+    #                             time(hour=23, minute=55))
+    # updater.job_queue.run_daily(fresh_profiles,
+    #                             time(hour=7, minute=40))
+    # updater.job_queue.run_daily(fresh_profiles,
+    #                             time(hour=11, minute=40))
+    # updater.job_queue.run_daily(fresh_profiles,
+    #                             time(hour=15, minute=40))
+    # updater.job_queue.run_daily(fresh_profiles,
+    #                             time(hour=19, minute=40))
+    # updater.job_queue.run_daily(fresh_profiles,
+    #                             time(hour=23, minute=40))
 
     # Start the Bot
     updater.start_polling()

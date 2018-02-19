@@ -378,9 +378,12 @@ def admin_allowed(adm_type=AdminType.FULL, ban_enable=True, allowed_types=()):
         def wrapper(bot: Bot, update, *args, **kwargs):
             session = Session()
             try:
-                allowed = check_admin(update, session, adm_type, allowed_types)
-                if ban_enable:
-                    allowed &= check_ban(update, session)
+                members = bot.getChatAdministrators(update.effective_chat.id)
+                allowed = False
+                for member in members:
+                    if member.user.id == update.effective_user.id:
+                        allowed = True
+                        break
                 if allowed:
                     if func.__name__ not in ['manage_all', 'trigger_show', 'user_panel', 'wrapper']:
                         log(session, update.effective_user.id, update.effective_chat.id, func.__name__,
