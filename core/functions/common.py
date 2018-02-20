@@ -9,7 +9,7 @@ from core.functions.triggers import trigger_decorator
 from core.functions.reply_markup import generate_admin_markup, generate_user_markup
 from core.texts import *
 from core.types import AdminType, Admin, Stock, admin_allowed, user_allowed, SquadMember, Auth, Group, cap_allowed
-from core.utils import send_async, add_user
+from core.utils import send_async, add_user, update_group
 
 from config import WEB_LINK
 
@@ -30,7 +30,8 @@ def error(bot: Bot, update, error, **kwargs):
 
 @cap_allowed
 def bind(bot: Bot, update: Update, session):
-    group = session.query(Group).filter(Group.id == update.effective_chat.id).first()
+    group = update_group(update.message.chat, session)
+    add_user(update.effective_user, session)
     if group:
         group.bot_in_group = True
         session.add(group)
@@ -40,7 +41,8 @@ def bind(bot: Bot, update: Update, session):
 
 @cap_allowed
 def unbind(bot: Bot, update: Update, session):
-    group = session.query(Group).filter(Group.id == update.effective_chat.id).first()
+    group = update_group(update.message.chat, session)
+    add_user(update.effective_user, session)
     if group:
         group.bot_in_group = False
         session.add(group)

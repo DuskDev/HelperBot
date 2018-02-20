@@ -14,12 +14,6 @@ def send_async(bot: Bot, *args, **kwargs):
 
     except TelegramError as err:
         bot.logger.error(err.message)
-        session = Session()
-        group = session.query(Group).filter_by(id=kwargs['chat_id']).first()
-        if group is not None:
-            group.bot_in_group = False
-            session.add(group)
-            session.commit()
         return None
 
 
