@@ -8,7 +8,7 @@ from telegram import Update, Bot, ParseMode
 from core.functions.triggers import trigger_decorator
 from core.functions.reply_markup import generate_admin_markup, generate_user_markup
 from core.texts import *
-from core.types import AdminType, Admin, Stock, admin_allowed, user_allowed, SquadMember, Auth, Group
+from core.types import AdminType, Admin, Stock, admin_allowed, user_allowed, SquadMember, Auth, Group, cap_allowed
 from core.utils import send_async, add_user
 
 from config import WEB_LINK
