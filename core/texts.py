@@ -26,6 +26,8 @@ MSG_LIST_ADMINS_USER_FORMAT = '@{} {} {}\n'
 
 MSG_EMPTY = '[Пусто]\n'
 
+MSG_BIND = 'Этот чат повинуется мне!'
+MSG_UNBIND = 'Игнор мод он'
 MSG_START_WELCOME = 'Привет'
 MSG_ADMIN_WELCOME = 'Да здравствует админ!'
 

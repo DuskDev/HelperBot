@@ -45,7 +45,7 @@ from core.functions.common import (
     help_msg, ping, start, error, kick,
     admin_panel, stock_compare, trade_compare,
     delete_msg, delete_user,
-    user_panel, web_auth)
+    user_panel, web_auth, bind, unbind)
 from core.functions.inline_keyboard_handling import (
     callback_query, send_status, send_order
 )
@@ -444,6 +444,8 @@ def main():
     # disp.add_handler(CommandHandler("set_global_trigger", set_global_trigger))
     # disp.add_handler(CommandHandler("add_global_trigger", add_global_trigger))
     # disp.add_handler(CommandHandler("del_global_trigger", del_global_trigger))
+    disp.add_handler(CommandHandler('bind', bind))
+    disp.add_handler(CommandHandler('unbind', unbind))
     disp.add_handler(CommandHandler("set_trigger", set_trigger))
     disp.add_handler(CommandHandler("add_trigger", add_trigger))
     disp.add_handler(CommandHandler("del_trigger", del_trigger))

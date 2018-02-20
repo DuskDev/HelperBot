@@ -14,7 +14,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from telegram import Bot
 
-from config import DB
+from config import DB, SUPER_ADMIN_ID
 
 
 class AdminType(Enum):
@@ -63,7 +63,7 @@ class Group(Base):
     welcome_enabled = Column(Boolean, default=False)
     allow_trigger_all = Column(Boolean, default=False)
     allow_pin_all = Column(Boolean, default=False)
-    bot_in_group = Column(Boolean, default=True)
+    bot_in_group = Column(Boolean, default=False)
 
     group_items = relationship('OrderGroupItem', back_populates='chat')
     squad = relationship('Squad', back_populates='chat')
@@ -378,23 +378,41 @@ def admin_allowed(adm_type=AdminType.FULL, ban_enable=True, allowed_types=()):
         def wrapper(bot: Bot, update, *args, **kwargs):
             session = Session()
             try:
-                members = bot.getChatAdministrators(update.effective_chat.id)
-                allowed = False
-                for member in members:
-                    if member.user.id == update.effective_user.id:
-                        allowed = True
-                        break
-                if allowed:
-                    if func.__name__ not in ['manage_all', 'trigger_show', 'user_panel', 'wrapper']:
-                        log(session, update.effective_user.id, update.effective_chat.id, func.__name__,
-                            update.message.text if update.message else None or
-                            update.callback_query.data if update.callback_query else None)
-                    func(bot, update, session, *args, **kwargs)
+                group = session.query(Group).filter(Group.id == update.effective_chat.id).first()
+                if group and group.bot_in_group:
+                    members = bot.getChatAdministrators(update.effective_chat.id)
+                    allowed = False
+                    for member in members:
+                        if member.user.id == update.effective_user.id:
+                            allowed = True
+                            break
+                    if allowed:
+                        if func.__name__ not in ['manage_all', 'trigger_show', 'user_panel', 'wrapper']:
+                            log(session, update.effective_user.id, update.effective_chat.id, func.__name__,
+                                update.message.text if update.message else None or
+                                update.callback_query.data if update.callback_query else None)
+                        func(bot, update, session, *args, **kwargs)
             except SQLAlchemyError as err:
                 bot.logger.error(str(err))
                 session.rollback()
         return wrapper
     return decorate
+
+
+def cap_allowed(func):
+    def wrapper(bot: Bot, update, *args, **kwargs):
+        session = Session()
+        try:
+            if update.effective_user.id in SUPER_ADMIN_ID:
+                if func.__name__ not in ['manage_all', 'trigger_show', 'user_panel', 'wrapper']:
+                    log(session, update.effective_user.id, update.effective_chat.id, func.__name__,
+                        update.message.text if update.message else None or
+                                                                   update.callback_query.data if update.callback_query else None)
+                func(bot, update, session, *args, **kwargs)
+        except SQLAlchemyError as err:
+            bot.logger.error(str(err))
+            session.rollback()
+    return wrapper
 
 
 def user_allowed(ban_enable=True):

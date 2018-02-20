@@ -8,7 +8,7 @@ from telegram import Update, Bot, ParseMode
 from core.functions.triggers import trigger_decorator
 from core.functions.reply_markup import generate_admin_markup, generate_user_markup
 from core.texts import *
-from core.types import AdminType, Admin, Stock, admin_allowed, user_allowed, SquadMember, Auth
+from core.types import AdminType, Admin, Stock, admin_allowed, user_allowed, SquadMember, Auth, Group
 from core.utils import send_async, add_user
 
 from config import WEB_LINK
@@ -26,6 +26,26 @@ def error(bot: Bot, update, error, **kwargs):
     """ Error handling """
     LOGGER.error("An error (%s) occurred: %s"
                  % (type(error), error.message))
+
+
+@cap_allowed
+def bind(bot: Bot, update: Update, session):
+    group = session.query(Group).filter(Group.id == update.effective_chat.id).first()
+    if group:
+        group.bot_in_group = True
+        session.add(group)
+        session.commit()
+        send_async(bot, chat_id=update.effective_chat.id, text=MSG_BIND, parse_mode=ParseMode.HTML)
+
+
+@cap_allowed
+def unbind(bot: Bot, update: Update, session):
+    group = session.query(Group).filter(Group.id == update.effective_chat.id).first()
+    if group:
+        group.bot_in_group = False
+        session.add(group)
+        session.commit()
+        send_async(bot, chat_id=update.effective_chat.id, text=MSG_UNBIND, parse_mode=ParseMode.HTML)
 
 
 @user_allowed
