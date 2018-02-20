@@ -9,9 +9,7 @@ def trigger_decorator(func):
     @user_allowed
     def wrapper(bot, update, session, *args, **kwargs):
         group = update_group(update.message.chat, session)
-        if group is None and \
-                check_admin(update, session, AdminType.FULL) or \
-                group is not None and \
+        if group is not None and \
                 (group.allow_trigger_all or
                  check_admin(update, session, AdminType.GROUP)):
             func(bot, update, session, *args, **kwargs)

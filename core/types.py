@@ -380,12 +380,15 @@ def admin_allowed(adm_type=AdminType.FULL, ban_enable=True, allowed_types=()):
             try:
                 group = session.query(Group).filter(Group.id == update.effective_chat.id).first()
                 if group and group.bot_in_group:
-                    members = bot.getChatAdministrators(update.effective_chat.id)
-                    allowed = False
-                    for member in members:
-                        if member.user.id == update.effective_user.id:
-                            allowed = True
-                            break
+                    if adm_type == AdminType.NOT_ADMIN:
+                        allowed = True
+                    else:
+                        members = bot.getChatAdministrators(update.effective_chat.id)
+                        allowed = False
+                        for member in members:
+                            if member.user.id == update.effective_user.id:
+                                allowed = True
+                                break
                     if allowed:
                         if func.__name__ not in ['manage_all', 'trigger_show', 'user_panel', 'wrapper']:
                             log(session, update.effective_user.id, update.effective_chat.id, func.__name__,
