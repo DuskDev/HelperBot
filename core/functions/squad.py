@@ -6,7 +6,7 @@ from telegram import Update, Bot, ParseMode, TelegramError
 from core.functions.reply_markup import generate_squad_markup
 from core.template import fill_char_template
 from core.types import User, AdminType, Admin, admin_allowed, Group, Squad, SquadMember, user_allowed, Report, Character
-from core.utils import send_async
+from core.utils import send_async, ping_users
 from core.functions.inline_markup import generate_squad_list, generate_leave_squad, generate_squad_request, \
     generate_other_reports, generate_squad_request_answer, generate_squad_invite_answer, generate_fire_up, \
     generate_yes_no
@@ -284,9 +284,8 @@ def call_squad(bot: Bot, update: Update, session):
         users = session.query(User).join(SquadMember).filter(User.id == SquadMember.user_id)\
             .filter(SquadMember.squad_id == squad.chat_id).all()
         msg = MSG_SQUAD_CALL_HEADER
-        for user in users:
-            msg += '@' + user.username + ' '
         send_async(bot, chat_id=update.message.chat.id, text=msg)
+        ping_users(bot, users, update.message.chat.id)
 
 
 @admin_allowed(AdminType.GROUP)

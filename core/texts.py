@@ -23,6 +23,7 @@ MSG_NEW_SUPER_ADMIN_EXISTS = '@{} уже суперадмин!'
 MSG_LIST_ADMINS_HEADER = 'Список здешних админов:\n'
 MSG_LIST_ADMINS_FORMAT = '{} @{} {} {}\n'
 MSG_LIST_ADMINS_USER_FORMAT = '@{} {} {}\n'
+MSG_LIST_USER_FORMAT = '@{} '
 
 MSG_EMPTY = '[Пусто]\n'
 
