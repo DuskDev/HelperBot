@@ -1,3 +1,4 @@
+from sqlalchemy import func, and_, or_
 from telegram import Update, Bot
 
 from core.functions.triggers import trigger_decorator
@@ -6,12 +7,16 @@ from core.utils import send_async, update_group, ping_users
 
 
 def select_users(group, min_lvl, max_lvl, session):
-    users = session.query(User).join(Character).join(SquadMember)
+    characters = session.query(Character.user_id, func.max(Character.date)).group_by(Character.user_id).all()
+    characters = session.query(Character).filter(or_(*(and_(Character.user_id == user_id, Character.date == date)
+                                                 for (user_id, date) in characters))).subquery('characters')
+    users = session.query(User).join(characters).join(SquadMember)
     users = users.filter(SquadMember.squad_id == group.id)
+    users = users.group_by(User)
     if min_lvl:
-        users = users.filter(Character.level >= min_lvl)
+        users = users.filter(characters.c.level >= min_lvl)
     if max_lvl:
-        users = users.filter(Character.level <= max_lvl)
+        users = users.filter(characters.c.level <= max_lvl)
     return users.all()
 
 
