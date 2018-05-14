@@ -1,14 +1,15 @@
 from datetime import datetime
 
 from sqlalchemy import or_, and_
-from telegram import Update, Bot, ParseMode
+from telegram import Update, Bot, ParseMode, TelegramError
 
 from core.functions.reply_markup import generate_squad_markup
 from core.template import fill_char_template
 from core.types import User, AdminType, Admin, admin_allowed, Group, Squad, SquadMember, user_allowed, Report, Character
-from core.utils import send_async
+from core.utils import send_async, ping_users
 from core.functions.inline_markup import generate_squad_list, generate_leave_squad, generate_squad_request, \
-    generate_other_reports, generate_squad_request_answer, generate_squad_invite_answer, generate_fire_up
+    generate_other_reports, generate_squad_request_answer, generate_squad_invite_answer, generate_fire_up, \
+    generate_yes_no
 from core.texts import *
 from core.constants import *
 
@@ -17,7 +18,7 @@ from core.constants import *
 def squad_about(bot: Bot, update: Update, session):
     admin = session.query(Admin).filter(Admin.user_id == update.message.from_user.id,
                                         Admin.admin_group != 0).first()
-    squad_member = session.query(SquadMember).filter_by(user_id=update.message.from_user.id).first()
+    squad_member = session.query(SquadMember).filter_by(user_id=update.message.from_user.id, approved=True).first()
     markup = generate_squad_markup(is_group_admin=admin is not None, in_squad=True if squad_member else False)
     send_async(bot,
                chat_id=update.message.chat.id,
@@ -194,7 +195,7 @@ def remove_from_squad(bot: Bot, update: Update, session):
         if squad is not None:
             group_admin.append(adm)
     for adm in group_admin:
-        members = session.query(SquadMember).filter_by(squad_id=adm.admin_group)
+        members = session.query(SquadMember).filter_by(squad_id=adm.admin_group, approved=True).all()
         markup = generate_fire_up(members)
         squad = session.query(Squad).filter_by(chat_id=adm.admin_group).first()
         send_async(bot, chat_id=update.message.chat.id,
@@ -203,26 +204,56 @@ def remove_from_squad(bot: Bot, update: Update, session):
 
 
 @user_allowed
-def leave_squad(bot: Bot, update: Update, session):
+def leave_squad_request(bot: Bot, update: Update, session):
     member = session.query(SquadMember).filter_by(user_id=update.message.from_user.id).first()
     user = session.query(User).filter_by(id=update.message.from_user.id).first()
     if member:
         squad = member.squad
-        session.delete(member)
-        session.commit()
-        admins = session.query(Admin).filter_by(admin_group=squad.chat_id).all()
-        for adm in admins:
-            if adm.user_id != update.message.from_user.id:
-                send_async(bot, chat_id=adm.user_id,
-                           text=MSG_SQUAD_LEAVED.format(user.character.name, squad.squad_name),
-                           parse_mode=ParseMode.HTML)
-        send_async(bot, chat_id=member.squad_id,
-                   text=MSG_SQUAD_LEAVED.format(user.character.name, squad.squad_name), parse_mode=ParseMode.HTML)
+        markup = generate_yes_no(user_id=user.id)
         send_async(bot, chat_id=member.user_id,
-                   text=MSG_SQUAD_LEAVED.format(user.character.name, squad.squad_name), parse_mode=ParseMode.HTML)
+                   text=MSG_SQUAD_LEAVE_ASK.format(user.character.name, squad.squad_name), parse_mode=ParseMode.HTML,
+                   reply_markup=markup)
     else:
         send_async(bot, chat_id=user.id,
                    text=MSG_SQUAD_NONE, parse_mode=ParseMode.HTML)
+
+
+def leave_squad(bot: Bot, user: User, member: SquadMember, message, session):
+    if member:
+        squad = session.query(Squad).filter(Squad.chat_id == member.squad_id).first()
+        member_user = session.query(User).filter(User.id == member.user_id).first()
+        session.delete(member)
+        session.commit()
+        if member.approved:
+            admins = session.query(Admin).filter_by(admin_group=squad.chat_id).all()
+            for adm in admins:
+                if adm.user_id != user.id:
+                    send_async(bot, chat_id=adm.user_id,
+                               text=MSG_SQUAD_LEAVED.format(member_user.character.name, squad.squad_name),
+                               parse_mode=ParseMode.HTML)
+            send_async(bot, chat_id=member.squad_id,
+                       text=MSG_SQUAD_LEAVED.format(member_user.character.name, squad.squad_name),
+                       parse_mode=ParseMode.HTML)
+        try:
+            bot.kick_chat_member(squad.chat_id, member.user_id)
+        except TelegramError as err:
+            bot.logger.error(err.message)
+
+        if member.user_id == user.id:
+            bot.editMessageText(MSG_SQUAD_LEAVED.format(member_user.character.name, squad.squad_name),
+                                message.chat.id,
+                                message.message_id, parse_mode=ParseMode.HTML)
+        else:
+            send_async(bot, chat_id=member.user_id,
+                       text=MSG_SQUAD_LEAVED.format(member_user.character.name, squad.squad_name),
+                       parse_mode=ParseMode.HTML)
+            members = session.query(SquadMember).filter_by(squad_id=member.squad_id, approved=True).all()
+            bot.editMessageText(message.text,
+                                message.chat.id,
+                                message.message_id,
+                                reply_markup=generate_fire_up(members))
+    else:
+        send_async(bot, chat_id=user.id, text=MSG_SQUAD_ALREADY_DELETED)
 
 
 @admin_allowed(AdminType.GROUP)
@@ -246,18 +277,15 @@ def add_to_squad(bot: Bot, update: Update, session):
                             reply_markup=markup)
 
 
-
-
 @admin_allowed(AdminType.GROUP)
 def call_squad(bot: Bot, update: Update, session):
     squad = session.query(Squad).filter_by(chat_id=update.message.chat.id).first()
     if squad is not None:
         users = session.query(User).join(SquadMember).filter(User.id == SquadMember.user_id)\
             .filter(SquadMember.squad_id == squad.chat_id).all()
-        msg = 'Все сюда!\n'
-        for user in users:
-            msg += '@' + user.username + ' '
+        msg = MSG_SQUAD_CALL_HEADER
         send_async(bot, chat_id=update.message.chat.id, text=msg)
+        ping_users(bot, users, update.message.chat.id)
 
 
 @admin_allowed(AdminType.GROUP)
@@ -287,7 +315,7 @@ def battle_reports_show(bot: Bot, update: Update, session):
         for user, report in reports:
             total_members += 1
             if report:
-                text += '<b>{}</b> (@{})\n⚔{} 🛡{} 🔥{} 💰{} 📦{}\n'.format(
+                text += MSG_REPORT_SUMMARY_ROW.format(
                     report.name, user.username, report.attack, report.defence,
                     report.earned_exp, report.earned_gold, report.earned_stock)
                 full_atk += report.attack
@@ -297,14 +325,9 @@ def battle_reports_show(bot: Bot, update: Update, session):
                 full_stock += report.earned_stock
                 total_reports += 1
             else:
-                text += '<b>{}</b> (@{}) ❗\n'.format(user.character.name, user.username)
-        text = 'Репорты отряда {} за битву {}\n' \
-               'Репорты: {} из {}\n' \
-               '<b>Общие</b>\n' \
-               'Атака: ⚔{}\n' \
-               'Защита: 🛡{}\n' \
-               'Профит: 🔥{} 💰{} 📦{}\n\n' \
-               '<b>Личные</b>\n'.format(squad.squad_name, time_from.strftime('%d-%m-%Y %H:%M'), total_reports,
-                                        total_members, full_atk, full_def, full_exp, full_gold, full_stock) + text
+                text += MSG_REPORT_SUMMARY_ROW_EMPTY.format(user.character.name, user.username)
+        text = MSG_REPORT_SUMMARY_HEADER.format(squad.squad_name, time_from.strftime('%d-%m-%Y %H:%M'), total_reports,
+                                                total_members, full_atk, full_def, full_exp, full_gold,
+                                                full_stock) + text
         markup = generate_other_reports(time_from, squad.chat_id)
         send_async(bot, chat_id=update.message.chat.id, text=text, parse_mode=ParseMode.HTML, reply_markup=markup)

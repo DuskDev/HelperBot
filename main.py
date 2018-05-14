@@ -17,6 +17,11 @@ from telegram.ext.dispatcher import run_async
 from telegram.error import TelegramError
 
 from config import TOKEN, GOVERNMENT_CHAT, CASTLE
+from core.chat_commands import CC_SET_WELCOME, CC_HELP, CC_SQUAD, CC_SHOW_WELCOME, CC_TURN_ON_WELCOME, \
+    CC_TURN_OFF_WELCOME, CC_SET_TRIGGER, CC_UNSET_TRIGGER, CC_TRIGGER_LIST, CC_ADMIN_LIST, CC_PING, CC_DAY_STATISTICS, \
+    CC_WEEK_STATISTICS, CC_BATTLE_STATISTICS, CC_ALLOW_TRIGGER_ALL, CC_DISALLOW_TRIGGER_ALL, CC_ADMINS, \
+    CC_ALLOW_PIN_ALL, CC_DISALLOW_PIN_ALL, CC_BOSS_1, CC_BOSS_2, CC_BOSS_3, CC_BOSS_4, CC_OPEN_HIRING, CC_CLOSE_HIRING, \
+    CC_PIN, CC_SILENT_PIN, CC_DELETE, CC_KICK
 from core.commands import ADMIN_COMMAND_STATUS, ADMIN_COMMAND_RECRUIT, ADMIN_COMMAND_ORDER, ADMIN_COMMAND_SQUAD_LIST, \
     ADMIN_COMMAND_GROUPS, ADMIN_COMMAND_FIRE_UP, USER_COMMAND_ME, USER_COMMAND_BUILD, USER_COMMAND_CONTACTS, \
     USER_COMMAND_SQUAD, USER_COMMAND_STATISTICS, USER_COMMAND_TOP, USER_COMMAND_SQUAD_REQUEST, USER_COMMAND_BACK, \
@@ -54,7 +59,7 @@ from core.functions.squad import (
     enable_thorns, disable_thorns,
     squad_list, squad_request, list_squad_requests,
     open_hiring, close_hiring, remove_from_squad, add_to_squad,
-    leave_squad, squad_about, call_squad, battle_reports_show)
+    leave_squad_request, squad_about, call_squad, battle_reports_show)
 from core.functions.statistics import statistic_about, exp_statistic
 from core.functions.top import top_about, attack_top, exp_top, def_top, global_build_top, week_build_top, \
     week_battle_top
@@ -66,7 +71,7 @@ from core.functions.triggers import (
 from core.functions.welcome import (
     welcome, set_welcome, show_welcome, enable_welcome, disable_welcome
 )
-from core.regexp import PROFILE, HERO, REPORT, BUILD_REPORT, REPAIR_REPORT
+from core.regexp import PROFILE, HERO, REPORT, BUILD_REPORT, REPAIR_REPORT, STOCK, TRADE_BOT
 from core.texts import (
     MSG_SQUAD_READY, MSG_FULL_TEXT_LINE, MSG_FULL_TEXT_TOTAL,
     MSG_MAIN_INLINE_BATTLE, MSG_MAIN_READY_TO_BATTLE, MSG_IN_DEV, MSG_UPDATE_PROFILE, MSG_SQUAD_DELETE_OUTDATED,
@@ -122,64 +127,64 @@ def manage_all(bot: Bot, update: Update, session, chat_data, job_queue):
 
         text = update.message.text.lower()
 
-        if text.startswith('приветствие:'):
+        if text.startswith(CC_SET_WELCOME):
             set_welcome(bot, update)
-        elif text == 'помощь':
+        elif text == CC_HELP:
             help_msg(bot, update)
-        elif text == 'отряд':
+        elif text == CC_SQUAD:
             call_squad(bot, update)
-        elif text == 'покажи приветствие':
+        elif text == CC_SHOW_WELCOME:
             show_welcome(bot, update)
-        elif text == 'включи приветствие':
+        elif text == CC_TURN_ON_WELCOME:
             enable_welcome(bot, update)
-        elif text == 'выключи приветствие':
+        elif text == CC_TURN_OFF_WELCOME:
             disable_welcome(bot, update)
-        elif text.startswith('затриггерь:'):
+        elif text.startswith(CC_SET_TRIGGER):
             set_trigger(bot, update)
-        elif text.startswith('разтриггерь:'):
+        elif text.startswith(CC_UNSET_TRIGGER):
             del_trigger(bot, update)
-        elif text == 'список триггеров':
+        elif text == CC_TRIGGER_LIST:
             list_triggers(bot, update)
-        elif text == 'список админов':
+        elif text == CC_ADMIN_LIST:
             list_admins(bot, update)
-        elif text == 'пинг':
+        elif text == CC_PING:
             ping(bot, update)
-        elif text == 'статистика за день':
+        elif text == CC_DAY_STATISTICS:
             day_activity(bot, update)
-        elif text == 'статистика за неделю':
+        elif text == CC_WEEK_STATISTICS:
             week_activity(bot, update)
-        elif text == 'статистика за бой':
+        elif text == CC_BATTLE_STATISTICS:
             battle_activity(bot, update)
-        elif text == 'разрешить триггерить всем':
+        elif text == CC_ALLOW_TRIGGER_ALL:
             enable_trigger_all(bot, update)
-        elif text == 'запретить триггерить всем':
+        elif text == CC_DISALLOW_TRIGGER_ALL:
             disable_trigger_all(bot, update)
-        elif text in ['админы', 'офицер']:
+        elif text in CC_ADMINS:
             admins_for_users(bot, update)
-        elif text == 'пинят все':
+        elif text == CC_ALLOW_PIN_ALL:
             pin_all(bot, update)
-        elif text == 'хорош пинить':
+        elif text == CC_DISALLOW_PIN_ALL:
             not_pin_all(bot, update)
-        elif text in ['бандит', 'краб']:
+        elif text in CC_BOSS_1:
             boss_leader(bot, update)
-        elif text in ['жало', 'королева роя']:
+        elif text in CC_BOSS_2:
             boss_zhalo(bot, update)
-        elif text in ['циклоп', 'борода']:
+        elif text in CC_BOSS_3:
             boss_monoeye(bot, update)
-        elif text in ['гидра', 'лич']:
+        elif text in CC_BOSS_4:
             boss_hydra(bot, update)
-        elif text == 'открыть набор':
+        elif text == CC_OPEN_HIRING:
             open_hiring(bot, update)
-        elif text == 'закрыть набор':
+        elif text == CC_CLOSE_HIRING:
             close_hiring(bot, update)
         elif update.message.reply_to_message is not None:
-            if text == 'пин':
+            if text == CC_PIN:
                 pin(bot, update)
-            elif text == 'спин':
+            elif text == CC_SILENT_PIN:
                 silent_pin(bot, update)
-            elif text == 'удоли':
+            elif text == CC_DELETE:
                 delete_msg(bot, update)
-            elif text == 'свали':
+            elif text == CC_KICK:
                 delete_user(bot, update)
             else:
                 trigger_show(bot, update)
@@ -246,7 +251,7 @@ def manage_all(bot: Bot, update: Update, session, chat_data, job_queue):
             elif text == USER_COMMAND_SQUAD.lower():
                 squad_about(bot, update)
             elif text == USER_COMMAND_SQUAD_LEAVE.lower():
-                leave_squad(bot, update)
+                leave_squad_request(bot, update)
             elif text == USER_COMMAND_CONTACTS.lower():
                 web_auth(bot, update)
             elif text == ADMIN_COMMAND_ADMINPANEL.lower():
@@ -258,7 +263,7 @@ def manage_all(bot: Bot, update: Update, session, chat_data, job_queue):
                 from_id = update.message.forward_from.id
 
                 if from_id == CWBOT_ID:
-                    if text.startswith('📦содержимое склада'):
+                    if text.startswith(STOCK):
                         stock_compare(bot, update, chat_data)
                     elif re.search(PROFILE, update.message.text) or re.search(HERO, update.message.text):
                         char_update(bot, update)
@@ -269,7 +274,7 @@ def manage_all(bot: Bot, update: Update, session, chat_data, job_queue):
                     elif re.search(REPAIR_REPORT, update.message.text):
                         repair_report_received(bot, update)
                 elif from_id == TRADEBOT_ID:
-                    if '📦твой склад с материалами:' in text:
+                    if TRADE_BOT in text:
                         trade_compare(bot, update, chat_data)
             elif not is_admin:
                 user_panel(bot, update)

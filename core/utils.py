@@ -4,6 +4,7 @@ from telegram import Bot
 from telegram.error import TelegramError
 from telegram.ext.dispatcher import run_async
 
+from core.texts import MSG_LIST_ADMINS_USER_FORMAT, MSG_EMPTY, MSG_LIST_USER_FORMAT
 from core.types import Session, User, Group
 
 
@@ -72,3 +73,28 @@ def update_group(grp, session):
         session.commit()
         return group
     return None
+
+
+def ping_users(bot: Bot, users: [User], chat_id, long_style=False, *args, **kwargs):
+    if not len(users):
+        send_async(bot, chat_id=chat_id, text=MSG_EMPTY, *args, **kwargs)
+        return
+
+    i = 0
+    msg = ''
+    if long_style:
+        text_format = MSG_LIST_ADMINS_USER_FORMAT
+    else:
+        text_format = MSG_LIST_USER_FORMAT
+
+    for user in users:
+        msg += text_format.format(user.username or '',
+                                  user.first_name or '',
+                                  user.last_name or '')
+        i += 1
+        if i == 5:
+            send_async(bot, chat_id=chat_id, text=msg, *args, **kwargs)
+            i = 0
+            msg = ''
+    if i != 0:
+        send_async(bot, chat_id=chat_id, text=msg, *args, **kwargs)

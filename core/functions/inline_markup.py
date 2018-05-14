@@ -10,7 +10,8 @@ from core.enums import Castle, Icons
 from core.texts import MSG_GROUP_STATUS_ADMIN_FORMAT, MSG_GROUP_STATUS_DEL_ADMIN, MSG_GROUP_STATUS, MSG_ON, MSG_OFF, \
     MSG_ORDER_GROUP_DEL, MSG_BACK, MSG_ORDER_PIN, MSG_ORDER_NO_PIN, MSG_ORDER_BUTTON, MSG_ORDER_NO_BUTTON, \
     MSG_ORDER_TO_SQUADS, MSG_ORDER_ACCEPT, MSG_ORDER_GROUP_ADD, MSG_SYMBOL_ON, MSG_SYMBOL_OFF, \
-    MSG_SQUAD_GREEN_INLINE_BUTTON, MSG_SQUAD_RED_INLINE_BUTTON
+    MSG_SQUAD_GREEN_INLINE_BUTTON, MSG_SQUAD_RED_INLINE_BUTTON, BTN_HERO, BTN_STOCK, BTN_EQUIPMENT, BTN_YES, BTN_NO, \
+    BTN_LEAVE, BTN_ACCEPT, BTN_DECLINE, BTN_WEEK, BTN_ALL_TIME, BTN_SQUAD_WEEK, BTN_SQUAD_ALL_TIME
 from core.types import Group, Admin, User, Squad, AdminType, OrderGroup, Character
 
 
@@ -48,6 +49,8 @@ class QueryType(Enum):
     SquadWeekBuildTop = 30
     BattleGlobalTop = 31
     BattleWeekTop = 32
+    Yes = 100
+    No = 200
 
 
 def generate_group_info(group_id, session):
@@ -211,13 +214,13 @@ def generate_group_manage(group_id, session):
 
 
 def generate_profile_buttons(user, back_key=False):
-    inline_keys = [[InlineKeyboardButton('🏅Герой', callback_data=json.dumps(
+    inline_keys = [[InlineKeyboardButton(BTN_HERO, callback_data=json.dumps(
         {'t': QueryType.ShowHero.value, 'id': user.id, 'b': back_key}))]]
     if user.stock:
-        inline_keys.append([InlineKeyboardButton('📦Склад', callback_data=json.dumps(
+        inline_keys.append([InlineKeyboardButton(BTN_STOCK, callback_data=json.dumps(
             {'t': QueryType.ShowStock.value, 'id': user.id, 'b': back_key}))])
     if user.equip:
-        inline_keys.append([InlineKeyboardButton('🎽Экипировка', callback_data=json.dumps(
+        inline_keys.append([InlineKeyboardButton(BTN_EQUIPMENT, callback_data=json.dumps(
             {'t': QueryType.ShowEquip.value, 'id': user.id, 'b': back_key}))])
     if back_key:
         inline_keys.append(
@@ -256,6 +259,16 @@ def generate_squad_list_key(squad, session):
         callback_data=json.dumps({'t': QueryType.MemberList.value, 'id': squad.chat_id}))]
 
 
+def generate_yes_no(user_id):
+    inline_keys = [InlineKeyboardButton(BTN_YES,
+                                        callback_data=json.dumps(
+                                            {'t': QueryType.Yes.value, 'id': user_id})),
+                   InlineKeyboardButton(BTN_NO,
+                                        callback_data=json.dumps(
+                                            {'t': QueryType.No.value, 'id': user_id}))]
+    return InlineKeyboardMarkup([inline_keys])
+
+
 def generate_squad_list(squads, session):
     inline_keys = []
     for squad in squads:
@@ -264,7 +277,7 @@ def generate_squad_list(squads, session):
 
 
 def generate_leave_squad(user_id):
-    inline_keys = [[InlineKeyboardButton('Выйти',
+    inline_keys = [[InlineKeyboardButton(BTN_LEAVE,
                                          callback_data=json.dumps({'t': QueryType.LeaveSquad.value,
                                                                    'id': user_id}))]]
     return InlineKeyboardMarkup(inline_keys)
@@ -338,10 +351,10 @@ def generate_squad_members(members, session):
 
 
 def generate_squad_request_answer(user_id):
-    inline_keys = [InlineKeyboardButton('✅Принять',
+    inline_keys = [InlineKeyboardButton(BTN_ACCEPT,
                                         callback_data=json.dumps(
                                             {'t': QueryType.RequestSquadAccept.value, 'id': user_id})),
-                   InlineKeyboardButton('❌Отклонить',
+                   InlineKeyboardButton(BTN_DECLINE,
                                         callback_data=json.dumps(
                                             {'t': QueryType.RequestSquadDecline.value, 'id': user_id}))]
     return InlineKeyboardMarkup([inline_keys])
@@ -368,26 +381,26 @@ def generate_fire_up(members):
 
 
 def generate_build_top():
-    inline_keys = [[InlineKeyboardButton("Неделя",
+    inline_keys = [[InlineKeyboardButton(BTN_WEEK,
                                          callback_data=json.dumps(
                                              {'t': QueryType.WeekBuildTop.value})),
-                    InlineKeyboardButton("Всё время",
+                    InlineKeyboardButton(BTN_ALL_TIME,
                                          callback_data=json.dumps(
                                              {'t': QueryType.GlobalBuildTop.value}))],
-                   [InlineKeyboardButton("Отряды за неделю",
+                   [InlineKeyboardButton(BTN_SQUAD_WEEK,
                                          callback_data=json.dumps(
                                              {'t': QueryType.SquadWeekBuildTop.value})),
-                    InlineKeyboardButton("Отряды за всё время",
+                    InlineKeyboardButton(BTN_SQUAD_ALL_TIME,
                                          callback_data=json.dumps(
                                              {'t': QueryType.SquadGlobalBuildTop.value}))]]
     return InlineKeyboardMarkup(inline_keys)
 
 
 def generate_battle_top():
-    inline_keys = [[InlineKeyboardButton("Неделя",
+    inline_keys = [[InlineKeyboardButton(BTN_WEEK,
                                          callback_data=json.dumps(
                                              {'t': QueryType.BattleWeekTop.value})),
-                    InlineKeyboardButton("Всё время",
+                    InlineKeyboardButton(BTN_ALL_TIME,
                                          callback_data=json.dumps(
                                              {'t': QueryType.BattleGlobalTop.value}))]]
     return InlineKeyboardMarkup(inline_keys)

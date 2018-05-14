@@ -3,7 +3,7 @@ from datetime import datetime
 from telegram import Bot, Update
 
 from core.texts import MSG_USER_UNKNOWN, MSG_USER_BANNED, MSG_YOU_BANNED, MSG_BAN_COMPLETE, MSG_ALREADY_BANNED, \
-    MSG_USER_NOT_BANNED, MSG_USER_UNBANNED, MSG_YOU_UNBANNED
+    MSG_USER_NOT_BANNED, MSG_USER_UNBANNED, MSG_YOU_UNBANNED, MSG_NO_REASON
 from core.types import admin_allowed, Ban, User, Squad, SquadMember, Admin
 from core.utils import send_async
 
@@ -23,7 +23,7 @@ def ban(bot: Bot, update: Update, session):
             banned.user_id = user.id
             banned.from_date = datetime.now()
             banned.to_date = datetime.max
-            banned.reason = reason or 'Причина не указана'
+            banned.reason = reason or MSG_NO_REASON
             member = session.query(SquadMember).filter_by(user_id=user.id).first()
             if member:
                 session.delete(member)

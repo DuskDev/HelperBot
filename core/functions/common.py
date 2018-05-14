@@ -11,6 +11,8 @@ from core.texts import *
 from core.types import AdminType, Admin, Stock, admin_allowed, user_allowed, SquadMember, Auth
 from core.utils import send_async, add_user
 
+from config import WEB_LINK
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -211,6 +213,6 @@ def web_auth(bot: Bot, update: Update, session):
         auth.user_id = user.id
         session.add(auth)
         session.commit()
-    link = 'https://dusk.ruckus.dj/?token={}'.format(auth.id)
+    link = WEB_LINK.format(auth.id)
     send_async(bot, chat_id=update.message.chat.id, text=MSG_PERSONAL_SITE_LINK.format(link),
                parse_mode=ParseMode.HTML, disable_web_page_preview=True)

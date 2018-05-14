@@ -22,6 +22,10 @@ class AdminType(Enum):
     FULL = 1
     GROUP = 2
 
+    '''Дополнительные группы. Не используйте их в параметре adm_type!!!'''
+    WARLORD = 10
+    SQUAD_CONTROLLER = 11
+
     NOT_ADMIN = 100
 
 
@@ -328,14 +332,14 @@ class Auth(Base):
     user_id = Column(BigInteger, ForeignKey(User.id), primary_key=True)
 
 
-def check_admin(update, session, adm_type):
+def check_admin(update, session, adm_type, allowed_types=()):
     allowed = False
     if adm_type == AdminType.NOT_ADMIN:
         allowed = True
     else:
         admins = session.query(Admin).filter_by(user_id=update.message.from_user.id).all()
         for adm in admins:
-            if adm is not None and adm.admin_type <= adm_type.value and \
+            if (AdminType(adm.admin_type) in allowed_types or adm.admin_type <= adm_type.value) and \
                     (adm.admin_group in [0, update.message.chat.id] or
                      update.message.chat.id == update.message.from_user.id):
                 if adm.admin_group != 0:
@@ -369,12 +373,12 @@ def log(session, user_id, chat_id, func_name, args):
     session.commit()
 
 
-def admin_allowed(adm_type=AdminType.FULL, ban_enable=True):
+def admin_allowed(adm_type=AdminType.FULL, ban_enable=True, allowed_types=()):
     def decorate(func):
         def wrapper(bot: Bot, update, *args, **kwargs):
             session = Session()
             try:
-                allowed = check_admin(update, session, adm_type)
+                allowed = check_admin(update, session, adm_type, allowed_types)
                 if ban_enable:
                     allowed &= check_ban(update, session)
                 if allowed:

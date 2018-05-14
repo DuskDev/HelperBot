@@ -11,7 +11,7 @@ from core.texts import (
     MSG_DEL_GLOBAL_ADMIN, MSG_DEL_GLOBAL_ADMIN_NOT_EXIST
 )
 from core.types import User, AdminType, Admin, admin_allowed, user_allowed
-from core.utils import send_async
+from core.utils import send_async, ping_users
 from config import SUPER_ADMIN_ID
 
 
@@ -96,13 +96,8 @@ def list_admins(bot: Bot, update: Update, session):
     for admin_user in admins:
         users.append(session.query(User).filter_by(id=admin_user.user_id).first())
     msg = MSG_LIST_ADMINS_HEADER
-    for user in users:
-        msg += MSG_LIST_ADMINS_FORMAT.format(user.id,
-                                             user.username,
-                                             user.first_name,
-                                             user.last_name)
-
     send_async(bot, chat_id=update.message.chat.id, text=msg)
+    ping_users(bot, users, update.message.chat.id, True)
 
 
 @user_allowed
@@ -112,15 +107,8 @@ def admins_for_users(bot: Bot, update: Update, session):
     for admin_user in admins:
         users.append(session.query(User).filter_by(id=admin_user.user_id).first())
     msg = MSG_LIST_ADMINS_HEADER
-    if users is None:
-        msg += MSG_EMPTY
-    else:
-        for user in users:
-            msg += MSG_LIST_ADMINS_USER_FORMAT.format(user.username or '',
-                                                      user.first_name or '',
-                                                      user.last_name or '')
-
     send_async(bot, chat_id=update.message.chat.id, text=msg)
+    ping_users(bot, users, update.message.chat.id, True)
 
 
 @admin_allowed(adm_type=AdminType.SUPER)

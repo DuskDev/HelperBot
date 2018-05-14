@@ -1,7 +1,8 @@
 from telegram import Update, Bot
 
 from core.functions.reply_markup import generate_statistics_markup
-from core.texts import MSG_STATISTICS_ABOUT
+from core.texts import MSG_STATISTICS_ABOUT, PLOT_X_LABEL, PLOT_Y_LABEL, MSG_DAY_SINGLE, MSG_DAY_PLURAL1, \
+    MSG_DAY_PLURAL2, MSG_DATE_FORMAT, MSG_PLOT_DESCRIPTION
 from core.types import user_allowed, Character
 from core.utils import send_async
 
@@ -26,8 +27,8 @@ def exp_statistic(bot: Bot, update: Update, session):
     profiles = session.query(Character).filter_by(user_id=update.message.from_user.id)\
         .order_by(Character.date).all()
     plot.switch_backend('ps')
-    plot.xlabel('Дата')
-    plot.ylabel('Опыт')
+    plot.xlabel(PLOT_X_LABEL)
+    plot.ylabel(PLOT_Y_LABEL)
     x = [profile.date for profile in profiles]
     y = [profile.exp for profile in profiles]
     need_exp = profiles[-1].needExp
@@ -58,16 +59,15 @@ def exp_statistic(bot: Bot, update: Update, session):
     if day_exp:
         delta_days = round(delta_exp / day_exp) or 1
         if (delta_days % 10 == 0) or (delta_days % 10 >= 5) or ((delta_days % 100) in (11, 12, 13, 14)):
-            days_text = 'дней'
+            days_text = MSG_DAY_PLURAL2
         elif (delta_days % 10) in (2, 3, 4):
-            days_text = 'дня'
+            days_text = MSG_DAY_PLURAL1
         else:
-            days_text = 'день'
-        text = ('и {} {}'.format(delta_days, days_text))
+            days_text = MSG_DAY_SINGLE
+        text = (MSG_DATE_FORMAT.format(delta_days, days_text))
 
     with open(filename, 'rb') as file:
-        bot.sendPhoto(update.message.chat.id, file, 'В среднем {} опыта в день. '
-                                                    'До следующего уровня осталось {} опыта {}'
+        bot.sendPhoto(update.message.chat.id, file, MSG_PLOT_DESCRIPTION
                       .format(int(day_exp), delta_exp, text))
     plot.clf()
     os.remove(filename)

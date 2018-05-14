@@ -51,7 +51,8 @@ def new_order_click(order_id, user_id):
             squad = session.query(Squad).filter_by(chat_id=order.chat_id).first()
             if squad is not None:
                 squad_member = session.query(SquadMember).filter_by(squad_id=squad.chat_id,
-                                                                    user_id=user_id)
+                                                                    user_id=user_id,
+                                                                    approved=True)
 
                 if squad_member is not None:
                     order_ok = session.query(OrderCleared).filter_by(order_id=order_id,
