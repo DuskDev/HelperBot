@@ -12,7 +12,6 @@ def select_users(group, min_lvl, max_lvl, session):
                                                  for (user_id, date) in characters))).subquery('characters')
     users = session.query(User).join(characters).join(SquadMember)
     users = users.filter(SquadMember.squad_id == group.id)
-    users = users.group_by(User)
     if min_lvl:
         users = users.filter(characters.c.level >= min_lvl)
     if max_lvl:
