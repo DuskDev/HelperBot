@@ -506,7 +506,10 @@ def callback_query(bot: Bot, update: Update, session, chat_data: dict, job_queue
         full_exp = 0
         full_gold = 0
         full_stock = 0
+        total_reports = 0
+        total_members = 0
         for user, report in reports:
+            total_members += 1
             if report:
                 text += MSG_REPORT_SUMMARY_ROW.format(
                     report.name, user.username, report.attack, report.defence,
@@ -516,13 +519,16 @@ def callback_query(bot: Bot, update: Update, session, chat_data: dict, job_queue
                 full_exp += report.earned_exp
                 full_gold += report.earned_gold
                 full_stock += report.earned_stock
+                total_reports += 1
             else:
                 text += MSG_REPORT_SUMMARY_ROW_EMPTY.format(user.character.name, user.username)
-        text = MSG_REPORT_SUMMARY_HEADER.format(squad.squad_name, time_from.strftime('%d-%m-%Y %H:%M'), full_atk, full_def,
-                                        full_exp, full_gold, full_stock) + text
+        text = MSG_REPORT_SUMMARY_HEADER.format(squad.squad_name, time_from.strftime('%d-%m-%Y %H:%M'), total_reports,
+                                                total_members, full_atk, full_def, full_exp, full_gold,
+                                                full_stock) + text
         markup = generate_other_reports(time_from, squad.chat_id)
         bot.editMessageText(text, update.callback_query.message.chat.id, update.callback_query.message.message_id,
                             parse_mode=ParseMode.HTML, reply_markup=markup)
+        update.callback_query.answer(text=MSG_READY)
     elif data['t'] == QueryType.GlobalBuildTop.value:
         update.callback_query.answer(text=MSG_TOP_GENERATING)
         global_build_top(bot, update)
