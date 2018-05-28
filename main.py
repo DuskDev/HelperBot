@@ -84,6 +84,14 @@ from sqlalchemy.exc import SQLAlchemyError
 # -----constants----
 CWBOT_ID = 587303845
 TRADEBOT_ID = 278525885
+BATTLE_TIMES = [
+    timedelta(hours=0),
+    timedelta(hours=4),
+    timedelta(hours=8),
+    timedelta(hours=12),
+    timedelta(hours=16),
+    timedelta(hours=20)
+]
 # -------------------
 
 logging.basicConfig(
@@ -429,14 +437,7 @@ def fresh_profiles(bot: Bot, job_queue):
         Session.rollback()
 
 
-def main():
-    # Create the EventHandler and pass it your bot's token.
-    updater = Updater(TOKEN)
-
-    # Get the dispatcher to register handlers
-    disp = updater.dispatcher
-
-    # on different commands - answer in Telegram
+def register_command_handlers(disp):
     disp.add_handler(CommandHandler("start", user_panel))
     disp.add_handler(CommandHandler("admin", admin_panel))
     disp.add_handler(CommandHandler("help", help_msg))
@@ -462,7 +463,6 @@ def main():
     disp.add_handler(CommandHandler("enable_trigger", enable_trigger_all))
     disp.add_handler(CommandHandler("disable_trigger", disable_trigger_all))
     disp.add_handler(CommandHandler("me", char_show))
-
     disp.add_handler(CommandHandler("add_squad", add_squad))
     disp.add_handler(CommandHandler("del_squad", del_squad))
     disp.add_handler(CommandHandler("enable_thorns", enable_thorns))
@@ -474,50 +474,44 @@ def main():
     disp.add_handler(CommandHandler("ban", ban))
     disp.add_handler(CommandHandler("unban", unban))
 
+
+def main():
+    # Create the EventHandler and pass it your bot's token.
+    updater = Updater(TOKEN)
+
+    # Get the dispatcher to register handlers
+    disp = updater.dispatcher
+
+    # handle commands
+    register_command_handlers(disp)
+
+    # handle inline btns
     disp.add_handler(CallbackQueryHandler(callback_query, pass_chat_data=True, pass_job_queue=True))
 
-    # on noncommand i.e message - echo the message on Telegram
+    # handle new users
     disp.add_handler(MessageHandler(Filters.status_update, welcome))
-    # disp.add_handler(MessageHandler(
-    # Filters.text, manage_text, pass_chat_data=True))
+
+    # handle text
     disp.add_handler(MessageHandler(
         Filters.all, manage_all, pass_chat_data=True, pass_job_queue=True))
 
     # log all errors
     disp.add_error_handler(error)
 
-    updater.job_queue.run_daily(ready_to_battle, time(hour=7, minute=50))
-    updater.job_queue.run_daily(ready_to_battle_result,
-                                time(hour=7, minute=55))
-    updater.job_queue.run_daily(ready_to_battle, time(hour=11, minute=50))
-    updater.job_queue.run_daily(ready_to_battle_result,
-                                time(hour=11, minute=55))
-    updater.job_queue.run_daily(ready_to_battle, time(hour=15, minute=50))
-    updater.job_queue.run_daily(ready_to_battle_result,
-                                time(hour=15, minute=55))
-    updater.job_queue.run_daily(ready_to_battle, time(hour=19, minute=50))
-    updater.job_queue.run_daily(ready_to_battle_result,
-                                time(hour=19, minute=55))
-    updater.job_queue.run_daily(ready_to_battle, time(hour=23, minute=50))
-    updater.job_queue.run_daily(ready_to_battle_result,
-                                time(hour=23, minute=55))
-    updater.job_queue.run_daily(fresh_profiles,
-                                time(hour=7, minute=40))
-    updater.job_queue.run_daily(fresh_profiles,
-                                time(hour=11, minute=40))
-    updater.job_queue.run_daily(fresh_profiles,
-                                time(hour=15, minute=40))
-    updater.job_queue.run_daily(fresh_profiles,
-                                time(hour=19, minute=40))
-    updater.job_queue.run_daily(fresh_profiles,
-                                time(hour=23, minute=40))
+    # register cron tasks
+    for btime in BATTLE_TIMES:
+        updater.job_queue.run_daily(fresh_profiles,
+                                    datetime.utcfromtimestamp((btime - timedelta(minutes=20)).seconds).time())
+        updater.job_queue.run_daily(ready_to_battle,
+                                    datetime.utcfromtimestamp((btime - timedelta(minutes=10)).seconds).time())
+        updater.job_queue.run_daily(ready_to_battle_result,
+                                    datetime.utcfromtimestamp((btime - timedelta(minutes=5)).seconds).time())
 
     # Start the Bot
     updater.start_polling()
-    # app.run(port=API_PORT)
+
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
-    # SIGTERM or SIGABRT. This should be used most of the time, since
-    # start_polling() is non-blocking and will stop the bot gracefully.
+    # SIGTERM or SIGABRT.
     updater.idle()
 
 
