@@ -1,5 +1,6 @@
 from telegram import Update, Bot, ParseMode
 
+from core.constants import BATTLE_TIMES
 from core.functions.inline_keyboard_handling import generate_profile_buttons
 from core.regexp import HERO, PROFILE, REPORT, BUILD_REPORT, REPAIR_REPORT
 from core.types import Character, Report, User, admin_allowed, Equip, user_allowed, BuildReport
@@ -176,17 +177,27 @@ def repair_report_received(bot: Bot, update: Update, session):
 
 @user_allowed(False)
 def report_received(bot: Bot, update: Update, session):
-    # if datetime.now() - update.message.forward_date > timedelta(minutes=1):
-    #     send_async(bot, chat_id=update.message.chat.id, text=MSG_REPORT_OLD)
-    # else:
     report = re.search(REPORT, update.message.text)
     user = session.query(User).filter_by(id=update.message.from_user.id).first()
     if report and user.character and str(report.group(2)) == user.character.name:
-        time_from = datetime(update.message.forward_date.year, update.message.forward_date.month,
-                             update.message.forward_date.day, int(update.message.forward_date.hour / 4) * 4, 0, 0)
-        time_to = datetime(update.message.forward_date.year, update.message.forward_date.month,
-                           update.message.forward_date.day + (1 if update.message.forward_date.hour >= 20 else 0),
-                           int(update.message.forward_date.hour / 4 + 1) * 4 % 24, 0, 0)
+        time_from = None
+        time_to = None
+        for i in range(len(BATTLE_TIMES)):
+            if BATTLE_TIMES[i].seconds/3600 > update.message.forward_date.hour:
+                time_from = datetime(update.message.forward_date.year, update.message.forward_date.month,
+                                     update.message.forward_date.day - 1 if i == 0 else 0,
+                                     BATTLE_TIMES[i - 1].seconds/3600)
+                time_to = datetime(update.message.forward_date.year, update.message.forward_date.month,
+                                   update.message.forward_date.day,
+                                   BATTLE_TIMES[i].seconds / 3600)
+                break
+        if time_from is None or time_to is None:
+            time_from = datetime(update.message.forward_date.year, update.message.forward_date.month,
+                                 update.message.forward_date.day,
+                                 BATTLE_TIMES[-1].seconds / 3600)
+            time_to = datetime(update.message.forward_date.year, update.message.forward_date.month,
+                               update.message.forward_date.day + 1,
+                               BATTLE_TIMES[0].seconds / 3600)
         report = session.query(Report).filter(Report.date > time_from, Report.date < time_to,
                                               Report.user_id == update.message.from_user.id).all()
         if len(report) == 0:

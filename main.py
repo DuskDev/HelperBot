@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from datetime import datetime, time, timedelta
+from datetime import datetime, timedelta
 import json
 import logging
 import re
@@ -28,7 +28,7 @@ from core.commands import ADMIN_COMMAND_STATUS, ADMIN_COMMAND_RECRUIT, ADMIN_COM
     TOP_COMMAND_ATTACK, TOP_COMMAND_DEFENCE, TOP_COMMAND_EXP, STATISTICS_COMMAND_EXP, USER_COMMAND_SQUAD_LEAVE, \
     ADMIN_COMMAND_REPORTS, ADMIN_COMMAND_ADMINPANEL, TOP_COMMAND_BUILD, \
     TOP_COMMAND_BATTLES
-from core.constants import DAYS_PROFILE_REMIND, DAYS_OLD_PROFILE_KICK
+from core.constants import DAYS_PROFILE_REMIND, DAYS_OLD_PROFILE_KICK, CWBOT_ID, TRADEBOT_ID, BATTLE_TIMES
 from core.functions.activity import (
     day_activity, week_activity, battle_activity
 )
@@ -42,7 +42,7 @@ from core.functions.bosses import (
 from core.functions.orders import order, orders
 
 from core.functions.common import (
-    help_msg, ping, start, error, kick,
+    help_msg, ping, error, kick,
     admin_panel, stock_compare, trade_compare,
     delete_msg, delete_user,
     user_panel, web_auth)
@@ -61,7 +61,7 @@ from core.functions.squad import (
     open_hiring, close_hiring, remove_from_squad, add_to_squad,
     leave_squad_request, squad_about, call_squad, battle_reports_show)
 from core.functions.statistics import statistic_about, exp_statistic
-from core.functions.top import top_about, attack_top, exp_top, def_top, global_build_top, week_build_top, \
+from core.functions.top import top_about, attack_top, exp_top, def_top, week_build_top, \
     week_battle_top
 from core.functions.triggers import (
     set_trigger, add_trigger, del_trigger, list_triggers, enable_trigger_all,
@@ -80,19 +80,6 @@ from core.types import Session, Order, Squad, Admin, user_allowed, Character, Sq
 from core.utils import add_user, send_async
 
 from sqlalchemy.exc import SQLAlchemyError
-
-# -----constants----
-CWBOT_ID = 587303845
-TRADEBOT_ID = 278525885
-BATTLE_TIMES = [
-    timedelta(hours=0),
-    timedelta(hours=4),
-    timedelta(hours=8),
-    timedelta(hours=12),
-    timedelta(hours=16),
-    timedelta(hours=20)
-]
-# -------------------
 
 logging.basicConfig(
     level=logging.WARNING,
