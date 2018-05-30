@@ -183,21 +183,17 @@ def report_received(bot: Bot, update: Update, session):
         time_from = None
         time_to = None
         for i in range(len(BATTLE_TIMES)):
-            if BATTLE_TIMES[i].seconds/3600 > update.message.forward_date.hour:
-                time_from = datetime(update.message.forward_date.year, update.message.forward_date.month,
-                                     update.message.forward_date.day - 1 if i == 0 else 0,
-                                     BATTLE_TIMES[i - 1].seconds/3600)
-                time_to = datetime(update.message.forward_date.year, update.message.forward_date.month,
-                                   update.message.forward_date.day,
-                                   BATTLE_TIMES[i].seconds / 3600)
+            if BATTLE_TIMES[i].hour > update.message.forward_date.hour:
+                timediff_prev = update.message.forward_date - datetime.combine(update.message.forward_date.date(),
+                                                                               BATTLE_TIMES[i-1])
+                if timediff_prev.days != 0:
+                    timediff_prev += timedelta(days=1)
+                time_from = update.message.forward_date - timediff_prev
+                time_to = time_from + timedelta(hours=(BATTLE_TIMES[i].hour - BATTLE_TIMES[i-1].hour) % 24)
                 break
         if time_from is None or time_to is None:
-            time_from = datetime(update.message.forward_date.year, update.message.forward_date.month,
-                                 update.message.forward_date.day,
-                                 BATTLE_TIMES[-1].seconds / 3600)
-            time_to = datetime(update.message.forward_date.year, update.message.forward_date.month,
-                               update.message.forward_date.day + 1,
-                               BATTLE_TIMES[0].seconds / 3600)
+            time_from = datetime.combine(update.message.forward_date, BATTLE_TIMES[-1])
+            time_to = datetime.combine(update.message.forward_date, BATTLE_TIMES[0]) + timedelta(days=1)
         report = session.query(Report).filter(Report.date > time_from, Report.date < time_to,
                                               Report.user_id == update.message.from_user.id).all()
         if len(report) == 0:

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 import json
 import logging
 import re
@@ -488,11 +488,11 @@ def main():
     # register cron tasks
     for btime in BATTLE_TIMES:
         updater.job_queue.run_daily(fresh_profiles,
-                                    datetime.utcfromtimestamp((btime - timedelta(minutes=20)).seconds).time())
+                                    time((btime.hour + 23) % 24, (btime.minute + 60 - 20) % 60))
         updater.job_queue.run_daily(ready_to_battle,
-                                    datetime.utcfromtimestamp((btime - timedelta(minutes=10)).seconds).time())
+                                    time((btime.hour + 23) % 24, (btime.minute + 60 - 10) % 60))
         updater.job_queue.run_daily(ready_to_battle_result,
-                                    datetime.utcfromtimestamp((btime - timedelta(minutes=5)).seconds).time())
+                                    time((btime.hour + 23) % 24, (btime.minute + 60 - 5) % 60))
 
     # Start the Bot
     updater.start_polling()

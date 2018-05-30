@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from sqlalchemy import or_, and_
 from telegram import Update, Bot, ParseMode, TelegramError
@@ -298,8 +298,14 @@ def battle_reports_show(bot: Bot, update: Update, session):
             group_admin.append([adm, squad])
     for adm, squad in group_admin:
         now = datetime.now()
-        time_from = datetime(now.year, now.month,
-                             now.day, int(now.hour / 4) * 4, 0, 0)
+        last_battletime = -1
+        battle_diff = timedelta(hours=BATTLE_TIMES[last_battletime].hour - BATTLE_TIMES[last_battletime - 1].hour)
+        for i in range(len(BATTLE_TIMES)):
+            if BATTLE_TIMES[i].hour > now.hour:
+                last_battletime = i - 1
+                battle_diff = timedelta(
+                    hours=(BATTLE_TIMES[last_battletime].hour - BATTLE_TIMES[last_battletime - 1].hour) % 24)
+        time_from = datetime.combine((now - battle_diff).date(), BATTLE_TIMES[last_battletime])
         reports = session.query(User, Report) \
             .join(SquadMember) \
             .outerjoin(Report, and_(User.id == Report.user_id, Report.date > time_from)) \

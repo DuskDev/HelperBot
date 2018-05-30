@@ -300,12 +300,10 @@ def generate_other_reports(battletime: datetime, squad_id):
     next_battletime = battletime
     for i in range(len(BATTLE_TIMES)):
         if battletime_time == BATTLE_TIMES[i]:
-            prev_battletime = datetime(battletime.year, battletime.month,
-                                       battletime.day - 1 if i == 0 else 0,
-                                       BATTLE_TIMES[i - 1].seconds/3600)
-            next_battletime = datetime(battletime.year, battletime.month,
-                                       battletime.day + 1 if i == len(BATTLE_TIMES) - 1 else 0,
-                                       BATTLE_TIMES[(i + 1) if i == len(BATTLE_TIMES) - 1 else 0].seconds/3600)
+            prev_battletime = battletime - timedelta(hours=(BATTLE_TIMES[i].hour - BATTLE_TIMES[i - 1].hour) % 24)
+            next_battletime = battletime + timedelta(hours=(BATTLE_TIMES[(i + 1) % len(BATTLE_TIMES)].hour -
+                                                            BATTLE_TIMES[i].hour) % 24)
+            break
     inline_keys = [[InlineKeyboardButton('<< ' + prev_battletime.strftime('%d-%m-%Y %H:%M'),
                                          callback_data=json.dumps(
                                              {'t': QueryType.OtherReport.value,
