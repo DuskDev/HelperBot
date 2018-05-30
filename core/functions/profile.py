@@ -1,5 +1,6 @@
 from telegram import Update, Bot, ParseMode
 
+from core.constants import BATTLE_TIMES
 from core.functions.inline_keyboard_handling import generate_profile_buttons
 from core.regexp import HERO, PROFILE, REPORT, BUILD_REPORT, REPAIR_REPORT
 from core.types import Character, Report, User, admin_allowed, Equip, user_allowed, BuildReport
@@ -176,17 +177,23 @@ def repair_report_received(bot: Bot, update: Update, session):
 
 @user_allowed(False)
 def report_received(bot: Bot, update: Update, session):
-    # if datetime.now() - update.message.forward_date > timedelta(minutes=1):
-    #     send_async(bot, chat_id=update.message.chat.id, text=MSG_REPORT_OLD)
-    # else:
     report = re.search(REPORT, update.message.text)
     user = session.query(User).filter_by(id=update.message.from_user.id).first()
     if report and user.character and str(report.group(2)) == user.character.name:
-        time_from = datetime(update.message.forward_date.year, update.message.forward_date.month,
-                             update.message.forward_date.day, int(update.message.forward_date.hour / 4) * 4, 0, 0)
-        time_to = datetime(update.message.forward_date.year, update.message.forward_date.month,
-                           update.message.forward_date.day + (1 if update.message.forward_date.hour >= 20 else 0),
-                           int(update.message.forward_date.hour / 4 + 1) * 4 % 24, 0, 0)
+        time_from = None
+        time_to = None
+        for i in range(len(BATTLE_TIMES)):
+            if BATTLE_TIMES[i].hour > update.message.forward_date.hour:
+                timediff_prev = update.message.forward_date - datetime.combine(update.message.forward_date.date(),
+                                                                               BATTLE_TIMES[i-1])
+                if timediff_prev.days != 0:
+                    timediff_prev += timedelta(days=1)
+                time_from = update.message.forward_date - timediff_prev
+                time_to = time_from + timedelta(hours=(BATTLE_TIMES[i].hour - BATTLE_TIMES[i-1].hour) % 24)
+                break
+        if time_from is None or time_to is None:
+            time_from = datetime.combine(update.message.forward_date, BATTLE_TIMES[-1])
+            time_to = datetime.combine(update.message.forward_date, BATTLE_TIMES[0]) + timedelta(days=1)
         report = session.query(Report).filter(Report.date > time_from, Report.date < time_to,
                                               Report.user_id == update.message.from_user.id).all()
         if len(report) == 0:

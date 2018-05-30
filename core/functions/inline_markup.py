@@ -1,11 +1,12 @@
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from enum import Enum
 
 from sqlalchemy import func, tuple_
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 from config import CASTLE
+from core.constants import BATTLE_TIMES
 from core.enums import Castle, Icons
 from core.texts import MSG_GROUP_STATUS_ADMIN_FORMAT, MSG_GROUP_STATUS_DEL_ADMIN, MSG_GROUP_STATUS, MSG_ON, MSG_OFF, \
     MSG_ORDER_GROUP_DEL, MSG_BACK, MSG_ORDER_PIN, MSG_ORDER_NO_PIN, MSG_ORDER_BUTTON, MSG_ORDER_NO_BUTTON, \
@@ -60,7 +61,7 @@ def generate_group_info(group_id, session):
     adm_del_keys = []
     for adm in admins:
         user = session.query(User).filter_by(id=adm.user_id).first()
-        adm_msg += MSG_GROUP_STATUS_ADMIN_FORMAT.\
+        adm_msg += MSG_GROUP_STATUS_ADMIN_FORMAT. \
             format(user.id, user.username or '', user.first_name or '', user.last_name or '')
         adm_del_keys.append([InlineKeyboardButton(MSG_GROUP_STATUS_DEL_ADMIN.
                                                   format(user.first_name or '', user.last_name or ''),
@@ -82,7 +83,7 @@ def generate_group_info(group_id, session):
 
 def generate_flag_orders():
     flag_btns = [InlineKeyboardButton(Castle.BLACK.value, callback_data=json.dumps(
-                     {'t': QueryType.OrderGroup.value, 'txt': Castle.BLACK.value})),
+        {'t': QueryType.OrderGroup.value, 'txt': Castle.BLACK.value})),
                  InlineKeyboardButton(Castle.WHITE.value, callback_data=json.dumps(
                      {'t': QueryType.OrderGroup.value, 'txt': Castle.WHITE.value})),
                  InlineKeyboardButton(Castle.BLUE.value, callback_data=json.dumps(
@@ -136,7 +137,7 @@ def generate_order_chats_markup(session, pin=True, btn=True):
     return inline_markup
 
 
-def generate_order_groups_markup(session, admin_user: list=None, pin: bool=True, btn=True):
+def generate_order_groups_markup(session, admin_user: list = None, pin: bool = True, btn=True):
     if admin_user:
         group_adm = True
         for adm in admin_user:
@@ -239,8 +240,8 @@ def generate_squad_list_key(squad, session):
     user_ids = []
     for member in members:
         user_ids.append(member.user_id)
-    actual_profiles = session.query(Character.user_id, func.max(Character.date)).\
-        filter(Character.user_id.in_(user_ids)).\
+    actual_profiles = session.query(Character.user_id, func.max(Character.date)). \
+        filter(Character.user_id.in_(user_ids)). \
         group_by(Character.user_id).all()
     characters = session.query(Character).filter(tuple_(Character.user_id, Character.date)
                                                  .in_([(a[0], a[1]) for a in actual_profiles])).all()
@@ -254,7 +255,7 @@ def generate_squad_list_key(squad, session):
             attack,
             defence,
             len(members),
-            int(level/(len(members) or 1))
+            int(level / (len(members) or 1))
         ),
         callback_data=json.dumps({'t': QueryType.MemberList.value, 'id': squad.chat_id}))]
 
@@ -293,18 +294,27 @@ def generate_squad_request(session):
     return InlineKeyboardMarkup(inline_keys)
 
 
-def generate_other_reports(time: datetime, squad_id):
-    inline_keys = [[InlineKeyboardButton('<< ' + (time - timedelta(hours=4)).strftime('%d-%m-%Y %H:%M'),
+def generate_other_reports(battletime: datetime, squad_id):
+    battletime_time = battletime.time()
+    prev_battletime = battletime
+    next_battletime = battletime
+    for i in range(len(BATTLE_TIMES)):
+        if battletime_time == BATTLE_TIMES[i]:
+            prev_battletime = battletime - timedelta(hours=(BATTLE_TIMES[i].hour - BATTLE_TIMES[i - 1].hour) % 24)
+            next_battletime = battletime + timedelta(hours=(BATTLE_TIMES[(i + 1) % len(BATTLE_TIMES)].hour -
+                                                            BATTLE_TIMES[i].hour) % 24)
+            break
+    inline_keys = [[InlineKeyboardButton('<< ' + prev_battletime.strftime('%d-%m-%Y %H:%M'),
                                          callback_data=json.dumps(
-                                                     {'t': QueryType.OtherReport.value,
-                                                      'ts': (time - timedelta(hours=4)).timestamp(),
-                                                      'c': squad_id}))]]
-    if time + timedelta(hours=4) < datetime.now():
-        inline_keys[0].append(InlineKeyboardButton((time + timedelta(hours=4)).strftime('%d-%m-%Y %H:%M') + ' >>',
+                                             {'t': QueryType.OtherReport.value,
+                                              'ts': prev_battletime.timestamp(),
+                                              'c': squad_id}))]]
+    if next_battletime < datetime.now():
+        inline_keys[0].append(InlineKeyboardButton(next_battletime.strftime('%d-%m-%Y %H:%M') + ' >>',
                                                    callback_data=json.dumps(
-                                                     {'t': QueryType.OtherReport.value,
-                                                      'ts': (time + timedelta(hours=4)).timestamp(),
-                                                      'c': squad_id})))
+                                                       {'t': QueryType.OtherReport.value,
+                                                        'ts': next_battletime.timestamp(),
+                                                        'c': squad_id})))
     return InlineKeyboardMarkup(inline_keys)
 
 
@@ -317,7 +327,7 @@ def generate_squad_members(members, session):
         filter(Character.user_id.in_(user_ids)). \
         group_by(Character.user_id).all()
     characters = session.query(Character).filter(tuple_(Character.user_id, Character.date)
-                                                 .in_([(a[0], a[1]) for a in actual_profiles]))\
+                                                 .in_([(a[0], a[1]) for a in actual_profiles])) \
         .order_by(Character.level.desc()).all()
     for character in characters:
         time_passed = datetime.now() - character.date
@@ -374,7 +384,7 @@ def generate_fire_up(members):
     inline_keys = []
     for member in members:
         inline_keys.append([InlineKeyboardButton('🔥{}: {}⚔ {}🛡'.format(member.user, member.user.character.attack,
-                                                                       member.user.character.defence),
+                                                                         member.user.character.defence),
                                                  callback_data=json.dumps(
                                                      {'t': QueryType.LeaveSquad.value, 'id': member.user_id}))])
     return InlineKeyboardMarkup(inline_keys)
