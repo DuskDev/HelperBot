@@ -6,7 +6,7 @@ MSG_USER_UNKNOWN = 'Такого овоща нет ¯\_(ツ)_/¯'
 
 MSG_NEW_GROUP_ADMIN = """⚜️Приветствуйте нового фермера: @{}!
 Для вызова списка команд используй /help"""
-NEW_GROUP_ADMIN_EXISTS = 'Фермер @{} уже на своем посту.'
+MSG_NEW_GROUP_ADMIN_EXISTS = 'Фермер @{} уже на своем посту.'
 
 MSG_DEL_GROUP_ADMIN_NOT_EXIST = 'У @{} здесь нет власти'
 MSG_DEL_GROUP_ADMIN = 'Ферма больше не нуждается в твоих услугах, @{}'
