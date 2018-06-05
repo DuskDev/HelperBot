@@ -11,9 +11,9 @@ class Castle(Enum):
     WHITE = '🍆'
     MINT = '🍁'
     DUSK = '🌹'
-    LES = '\U0001f332Лесной форт'
-    GORY = '\u26f0Горный форт'
-    SEA = '\u2693\uFE0FМорской форт'
+    LES = ''
+    GORY = ''
+    SEA = ''
 
 
 class Icons(Enum):
@@ -24,6 +24,6 @@ class Icons(Enum):
     WHITE = '🍆'
     MINT = '🍁'
     DUSK = '🌹'
-    LES = '\U0001f332'
-    GORY = '\u26f0'
-    SEA = '\u2693\uFE0F'
+    LES = ''
+    GORY = ''
+    SEA = ''
