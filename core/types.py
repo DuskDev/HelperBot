@@ -40,6 +40,7 @@ class MessageType(Enum):
     LOCATION = 7
     AUDIO = 8
     PHOTO = 9
+    ANIMATION = 10
 
 
 ENGINE = create_engine(DB,
