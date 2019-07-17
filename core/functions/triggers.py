@@ -18,11 +18,7 @@ def trigger_decorator(func):
     return wrapper
 
 
-def add_global_trigger_db(msg: Message, trigger_text: str, session):
-    trigger = session.query(Trigger).filter_by(trigger=trigger_text).first()
-    if trigger is None:
-        trigger = Trigger()
-        trigger.trigger = trigger_text
+def fill_trigger(trigger, msg):
     if msg.audio:
         trigger.message = msg.audio.file_id
         trigger.message_type = MessageType.AUDIO.value
@@ -56,6 +52,14 @@ def add_global_trigger_db(msg: Message, trigger_text: str, session):
     else:
         trigger.message = msg.text
         trigger.message_type = MessageType.TEXT.value
+
+
+def add_global_trigger_db(msg: Message, trigger_text: str, session):
+    trigger = session.query(Trigger).filter_by(trigger=trigger_text).first()
+    if trigger is None:
+        trigger = Trigger()
+        trigger.trigger = trigger_text
+    fill_trigger(trigger, msg)
     session.add(trigger)
     session.commit()
 
@@ -177,39 +181,7 @@ def add_trigger_db(msg: Message, chat, trigger_text: str, session):
         trigger = LocalTrigger()
         trigger.chat_id = chat.id
         trigger.trigger = trigger_text
-    if msg.audio:
-        trigger.message = msg.audio.file_id
-        trigger.message_type = MessageType.AUDIO.value
-    elif msg.document:
-        trigger.message = msg.document.file_id
-        trigger.message_type = MessageType.DOCUMENT.value
-    elif msg.voice:
-        trigger.message = msg.voice.file_id
-        trigger.message_type = MessageType.VOICE.value
-    elif msg.sticker:
-        trigger.message = msg.sticker.file_id
-        trigger.message_type = MessageType.STICKER.value
-    elif msg.contact:
-        trigger.message = str(msg.contact)
-        trigger.message_type = MessageType.CONTACT.value
-    elif msg.video:
-        trigger.message = msg.video.file_id
-        trigger.message_type = MessageType.VIDEO.value
-    elif msg.video_note:
-        trigger.message = msg.video_note.file_id
-        trigger.message_type = MessageType.VIDEO_NOTE.value
-    elif msg.location:
-        trigger.message = str(msg.location)
-        trigger.message_type = MessageType.LOCATION.value
-    elif msg.photo:
-        trigger.message = msg.photo[-1].file_id
-        trigger.message_type = MessageType.PHOTO.value
-    elif msg.animation:
-        trigger.message = msg.animation.file_id
-        trigger.message_type = MessageType.ANIMATION.value
-    else:
-        trigger.message = msg.text
-        trigger.message_type = MessageType.TEXT.value
+    fill_trigger(trigger, msg)
     session.add(trigger)
     session.commit()
 

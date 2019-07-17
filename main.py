@@ -464,7 +464,7 @@ def register_command_handlers(disp):
 
 def main():
     # Create the EventHandler and pass it your bot's token.
-    updater = Updater(TOKEN)
+    updater = Updater(TOKEN, use_context=False)
 
     # Get the dispatcher to register handlers
     disp = updater.dispatcher
