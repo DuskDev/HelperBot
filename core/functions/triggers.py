@@ -204,6 +204,9 @@ def add_trigger_db(msg: Message, chat, trigger_text: str, session):
     elif msg.photo:
         trigger.message = msg.photo[-1].file_id
         trigger.message_type = MessageType.PHOTO.value
+    elif msg.animation:
+        trigger.message = msg.animation.file_id
+        trigger.message_type = MessageType.ANIMATION.value
     else:
         trigger.message = msg.text
         trigger.message_type = MessageType.TEXT.value
