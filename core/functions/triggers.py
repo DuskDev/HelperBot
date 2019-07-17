@@ -125,6 +125,8 @@ def trigger_show(bot: Bot, update: Update, session):
             bot.send_location(update.message.chat.id, location['latitude'], location['longitude'])
         elif trigger.message_type == MessageType.PHOTO.value:
             bot.send_photo(update.message.chat.id, trigger.message)
+        elif trigger.message_type == MessageType.ANIMATION.value:
+            bot.send_animation(update.message.chat.id, trigger.message)
         else:
             send_async(bot, chat_id=update.message.chat.id, text=trigger.message, disable_web_page_preview=True)
 
